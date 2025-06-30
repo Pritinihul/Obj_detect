@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ML Detection</title>
+  </head>
+  <body>
+    <h2>Live Detection</h2>
+    <video id="webcam" autoplay></video>
+    <p id="result">Detecting...</p>
+
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
+    <script>
+      const URL = "https://teachablemachine.withgoogle.com/models/QiUZJJaQm/"; // replace with your link
+
+      let model, webcam;
+
+      async function init() {
+        model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+        webcam = new tmImage.Webcam(200, 200, true);
+        await webcam.setup();
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+        document.body.appendChild(webcam.canvas);
+      }
+
+      async function loop() {
+        webcam.update();
+        await predict();
+        window.requestAnimationFrame(loop);
+      }
+
+      async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        document.getElementById("result").innerText =
+          prediction[0].className + ": " + Math.round(prediction[0].probability * 100) + "%";
+      }
+
+      init();
+    </script>
+  </body>
+</html>
