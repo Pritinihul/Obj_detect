@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>ML Detection</title>
-  </head>
-  <body>
-    <h2>Live Detection</h2>
-    <video id="webcam" autoplay></video>
-    <p id="result">Detecting...</p>
+<head>
+  <title>ML Detection</title>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
+</head>
+<body>
+  <h2>Live Detection</h2>
+  <div id="webcam-container"></div>
+  <p id="result">Detecting...</p>
 
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
-    <script>
-      const URL = "https://teachablemachine.withgoogle.com/models/QiUZJJaQm/"; // replace with your link
+  <script>
+    const URL = "https://teachablemachine.withgoogle.com/models/QiUZJJaQm/";
+    let model, webcam;
 
-      let model, webcam;
+    async function init() {
+      model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+      webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+      await webcam.setup(); // request access
+      await webcam.play();
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
+      window.requestAnimationFrame(loop);
+    }
 
-      async function init() {
-        model = await tmImage.load(URL + "model.json", URL + "metadata.json");
-        webcam = new tmImage.Webcam(200, 200, true);
-        await webcam.setup();
-        await webcam.play();
-        window.requestAnimationFrame(loop);
-        document.body.appendChild(webcam.canvas);
-      }
+    async function loop() {
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
+    }
 
-      async function loop() {
-        webcam.update();
-        await predict();
-        window.requestAnimationFrame(loop);
-      }
+    async function predict() {
+      const prediction = await model.predict(webcam.canvas);
+      const result = prediction[0].className + ": " +
+                     Math.round(prediction[0].probability * 100) + "%";
+      document.getElementById("result").innerText = result;
+    }
 
-      async function predict() {
-        const prediction = await model.predict(webcam.canvas);
-        document.getElementById("result").innerText =
-          prediction[0].className + ": " + Math.round(prediction[0].probability * 100) + "%";
-      }
-
-      init();
-    </script>
-  </body>
+    init();
+  </script>
+</body>
 </html>
